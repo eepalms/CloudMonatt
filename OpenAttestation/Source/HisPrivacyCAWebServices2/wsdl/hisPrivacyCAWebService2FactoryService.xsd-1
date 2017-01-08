@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/" xmlns:ns1="http://www.w3.org/2005/08/addressing" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/">
+
+<xs:import namespace="http://www.w3.org/2005/08/addressing" schemaLocation="ws-addr.xsd" />
+
+<xs:element name="getHisPrivacyCAWebService2" type="tns:getHisPrivacyCAWebService2" />
+
+<xs:element name="getHisPrivacyCAWebService2Response" type="tns:getHisPrivacyCAWebService2Response" />
+
+<xs:complexType name="getHisPrivacyCAWebService2">
+<xs:sequence />
+</xs:complexType>
+
+<xs:complexType name="getHisPrivacyCAWebService2Response">
+<xs:sequence>
+<xs:element name="return" type="ns1:EndpointReferenceType" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

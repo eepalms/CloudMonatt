@@ -1,0 +1,39 @@
+#!/bin/bash
+#MLE search
+
+HOST_PARM="-h"
+HOST_NAME=""
+INFO=""
+PORT=8443
+ShowMleSearchExample()
+{
+   echo -e "Mle Search example:\n\033[31;49;5;1m bash oat_mle_search -h HOSTNAME_OF_OAT-APPRAISER '{KEY}' \033[0m"
+}
+
+if [ $# -lt 3 ];then
+  echo "parm num error!"
+  ShowMleSearchExample
+  exit 0
+fi
+
+if [ $1 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowMleSearchExample
+  exit 1
+else
+  HOST_NAME="$2"
+fi
+
+INFO="`echo "$3" | awk -F{ '{print $2}'| awk -F} '{print $1}'\
+     | sed 's/\"//g' | sed 's/:/=/g' | sed 's/,/\&/g'| sed 's/ /%20/g'`"
+
+
+oat_mle_search()
+{
+     curl --cacert ./certfile.cer -H "Content-Type: application/json" \
+     -X GET "https://$HOST_NAME:$PORT/WLMService/resources/mles?searchCriteria=$INFO"
+}
+
+
+oat_mle_search
+echo -e "\n"

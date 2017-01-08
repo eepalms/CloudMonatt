@@ -1,0 +1,3 @@
+CloudMonatt.
+
+The attestation_kernel is used to profile the VMs on the Xen, for image integrity, covert-channel confidentiality and CPU availability attestation

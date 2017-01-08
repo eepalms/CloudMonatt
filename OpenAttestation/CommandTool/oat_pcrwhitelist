@@ -1,0 +1,79 @@
+#!/bin/bash
+#create mles/whitelist/pcr script
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+HOST_NAME=""
+INFO=""
+PORT=8443
+ShowPcrExample()
+{
+  echo "Pcr bios Example:"
+  echo -e "Add  Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -a -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","pcrDigest":"PCR_VALUE", "mleName":"MLE_NAME_OF_BIOS_TYPE","mleVersion":"MLE_VERSION", "oemName": "OEM_NAME"}'\033[0m"
+  echo -e "Edit Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -e -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","pcrDigest":"PCR_VALUE", "mleName":"MLE_NAME_OF_BIOS_TYPE","mleVersion":"MLE_VERSION", "oemName": "OEM_NAME"}'\033[0m"
+  echo -e "Del  Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -d -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","mleName":"MLE_NAME_OF_BIOS_TYPE","mleVersion":"MLE_VERSION","oemName":"OEM_NAME"}'\033[0m"
+  echo "Pcr vmm Example:"
+  echo -e "Add  Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -a -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","pcrDigest":"PCR_VALUE","mleName":"MLE_NAME_OF_VMM_TYPE","mleVersion":"MLE_VERSION","osName":"OS_NAME","osVersion":"OS_VERSION"}'\033[0m"
+  echo -e "Edit Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -e -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","pcrDigest":"PCR_VALUE", "mleName":"MLE_NAME_OF_VMM_TYPE","mleVersion":"MLE_VERSION","osName":"OS_NAME","osVersion":"OS_VERSION"}'\033[0m"
+  echo -e "Del  Pcr example:\n\033[31;49;5;1m bash oat_pcrwhitelist -d -h HOSTNAME_OF_OAT-APPRAISER '{"pcrName":"PCR_NUM","mleName":"MLE_NAME_OF_VMM_TYPE","mleVersion":"MLE_VERSION","osName":"OS_NAME","osVersion":"OS_VERSION"}'\033[0m"
+}
+
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowPcrExample
+  exit 0
+fi
+
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowPcrExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ $1 == $DEL_PARM ];then
+  INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ /%20/g'`"
+else
+  INFO="$4"
+fi
+
+addOS() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/mles/whitelist/pcr"
+}
+
+editOS()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/mles/whitelist/pcr"
+}
+
+delOS()
+{
+  curl --cacert certfile.cer \
+        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/mles/whitelist/pcr?$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add PCR:"
+           addOS
+      ;;
+      $EDIT_PARM)
+           echo "edit PCR:"
+           editOS
+      ;;
+      $DEL_PARM)
+           echo "del PCR:"
+           delOS
+      ;;
+      *)
+      echo "Usage oat_pcr {-a|-e|-d}"
+      ShowPcrExample
+      exit 3
+esac
+echo -e "\n"

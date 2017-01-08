@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.PcrWhiteList" table="PCR_WHITE_LIST">
+		<id name="PcrWhiteListID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<property name="pcrName" column="PCR_NAME"/>
+		<property name="pcrDigest" column="PCR_DIGEST"/>
+		<many-to-one name="mle" class="gov.niarl.hisAppraiser.hibernate.domain.MLE" column="MLE_ID"/>
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,93 @@
+#!/bin/bash
+#create mles/whitelist/pcr script
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+SEARCH_PARM="-s"
+HOST_NAME=""
+INFO=""
+PORT=8443
+ShowHostExample()
+{
+  echo "Host Example:"
+  echo -e "Add  Host example:\n\033[31;49;5;1m bash oat_host -a -h HOSTNAME_OF_OAT-APPRAISER '{"HostName":"HOSTNAME-CLIENT","IPAddress":"IP_ADDRESS","Port":"PORT","BIOS_Name":"MLE_NAME_OF_BIOS_TYPE","BIOS_Version":"MLE_VERSION","BIOS_Oem":"OEM_NAME","VMM_Name":"MLE_NAME_OF_VMM_TYPE","VMM_Version":"MLE_VERSION","VMM_OSName":"OS_NAME","VMM_OSVersion":"OS_VERSION","Email":"","AddOn_Connection_String":"","Description":""}'\033[0m"
+
+  echo -e "Edit Host example:\n\033[31;49;5;1m bash oat_host -e -h HOSTNAME_OF_OAT-APPRAISER '{"HostName":"HOSTNAME-CLIENT","IPAddress":"IP_ADDRESS","Port":"PORT","BIOS_Name":"MLE_NAME_OF_BIOS_TYPE","BIOS_Version":"MLE_VERSION","BIOS_Oem":"OEM_NAME","VMM_Name":"MLE_NAME_OF_VMM_TYPE","VMM_Version":"MLE_VERSION","VMM_OSName":"OS_NAME","VMM_OSVersion":"OS_VERSION","Email":"E-MAIL","AddOn_Connection_String":"Moooooodify","Description":"Moooooodify"}'\033[0m"
+
+  echo -e "Del  Host example:\n\033[31;49;5;1m bash oat_host -d -h HOSTNAME_OF_OAT-APPRAISER '{"hostName":"HOSTNAME-CLIENT"}'\033[0m"
+  echo -e "Host Search example:\n\033[31;49;5;1m bash oat_host -s -h HOSTNAME_OF_OAT-APPRAISER '{KEY}' \033[0m"
+}
+
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowHostExample
+  exit 0
+fi
+
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowHostExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ $1 == $DEL_PARM ];then
+  INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ /%20/g'`"
+elif [ $1 == $SEARCH_PARM ]; then
+  INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed 's/ /%20/g'`"
+else
+  INFO="$4"
+fi
+
+echo $INFO
+
+addHOST() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/AttestationService/resources/hosts"
+}
+
+editHOST()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/AttestationService/resources/hosts"
+}
+
+delHOST()
+{
+  curl --cacert certfile.cer \
+        -X DELETE  "https://$HOST_NAME:$PORT/AttestationService/resources/hosts?$INFO"
+}
+
+searchHOST()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -X GET "https://$HOST_NAME:$PORT/AttestationService/resources/hosts?searchCriteria=$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add HOST:"
+           addHOST
+      ;;
+      $EDIT_PARM)
+           echo "edit HOST:"
+           editHOST
+      ;;
+      $DEL_PARM)
+           echo "del HOST:"
+           delHOST
+      ;;
+      $SEARCH_PARM)
+           echo "search HOST:" 
+           searchHOST
+      ;;
+      *)
+      echo "Usage oat_host {-a|-e|-d|-s}"
+      ShowHostExample
+      exit 3
+esac
+echo -e "\n"

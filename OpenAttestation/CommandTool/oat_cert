@@ -1,0 +1,25 @@
+#!/bin/bash
+#create oat cert
+PARM="-h"
+PORT="8443"
+ShowExample()
+{
+  echo -e "Create cert example:\033[31;49;5;1m$1\033[0m"
+}
+
+if [ $# -lt 2 ];then
+  echo "parm num error!"
+  ShowExample "bash oat_cert -h HOSTNAME_OF_OAT-APPRAISER"
+  exit 0
+fi
+if [ $1 != $PARM ];then
+  echo "parm error!"
+  ShowExample "bash oat_cert -h HOSTNAME_OF_OAT-APPRAISER"
+  exit 0
+fi
+if [ -e ./certfile.cer ];then
+  rm -f certfile.cer
+fi
+
+HOST_NAME="$2"
+openssl  s_client -connect "$HOST_NAME":$PORT -cipher DHE-RSA-AES256-SHA|tee  certfile.cer

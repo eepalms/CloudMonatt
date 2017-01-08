@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://server.hisWebService.webservices.sal.niarl.gov/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://server.hisWebService.webservices.sal.niarl.gov/">
+
+<xs:element name="getNonce" type="tns:getNonce" />
+
+<xs:element name="getNonceResponse" type="tns:getNonceResponse" />
+
+<xs:element name="postIntegrityReport" type="tns:postIntegrityReport" />
+
+<xs:element name="postIntegrityReportResponse" type="tns:postIntegrityReportResponse" />
+
+<xs:complexType name="postIntegrityReport">
+<xs:sequence>
+<xs:element name="integrityReport" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="postIntegrityReportResponse">
+<xs:sequence />
+</xs:complexType>
+
+<xs:complexType name="getNonce">
+<xs:sequence>
+<xs:element name="machineName" type="xs:string" minOccurs="0" />
+<xs:element name="userName" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getNonceResponse">
+<xs:sequence>
+<xs:element name="nonceSelect" type="tns:nonceSelect" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="nonceSelect">
+<xs:sequence>
+<xs:element name="nonce" type="xs:base64Binary" minOccurs="0" />
+<xs:element name="quote" type="tns:quote" minOccurs="0" />
+<xs:element name="select" type="xs:base64Binary" minOccurs="0" />
+<xs:element name="secproperty" type="xs:string" minOccurs="0" />
+<xs:element name="vid" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="quote">
+<xs:restriction base="xs:string">
+<xs:enumeration value="QUOTE1" />
+<xs:enumeration value="QUOTE2" />
+</xs:restriction>
+</xs:simpleType>
+</xs:schema>

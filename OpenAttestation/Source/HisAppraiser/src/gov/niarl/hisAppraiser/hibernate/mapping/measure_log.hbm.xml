@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.MeasureLog" table="measure_log">
+		<id name="id" column="id" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<many-to-one name="auditLog" column="audit_id" class="gov.niarl.hisAppraiser.hibernate.domain.AuditLog" unique="true"/>
+		<property name="txtStatus" column="txt_status"/>
+	</class>
+</hibernate-mapping>

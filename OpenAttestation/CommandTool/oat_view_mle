@@ -1,0 +1,37 @@
+#!/bin/bash
+#mle view
+HOST_PARM="-h"
+HOST_NAME=""
+INFO=""
+PORT=8443
+ShowMleViewExample()
+{
+   echo -e "bios Mle View example:\n\033[31;49;5;1m bash oat_view_mle -h HOSTNAME_OF_OAT-APPRAISER '{"mleName":"MLE_NAME","mleVersion":"MLE_VERSION","oemName":"OEM_NAME"}' \033[0m"
+   echo -e "vmm  Mle View example:\n\033[31;49;5;1m bash oat_view_mle -h HOSTNAME_OF_OAT-APPRAISER '{"mleName":"MLE_NAME","mleVersion":"MLE_VERSION","osName":"OS_NAME","osVersion":"OS_VERSION"}' \033[0m"
+}
+
+if [ $# -lt 3 ];then
+  echo "parm num error!"
+  ShowMleViewExample
+  exit 0
+fi
+
+if [ $1 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowMleViewExample
+  exit 1
+else
+  HOST_NAME="$2"
+fi
+
+INFO="`echo "$3" | awk -F{ '{print $2}'| awk -F} '{print $1}'\
+     | sed 's/\"//g' | sed 's/:/=/g' | sed 's/,/\&/g'| sed 's/ /%20/g'`"
+
+view_mle()
+{
+     curl --cacert ./certfile.cer -H "Content-Type: application/json" \
+     -X GET "https://$HOST_NAME:$PORT/WLMService/resources/mles/manifest?$INFO"
+}
+
+view_mle
+echo -e "\n"

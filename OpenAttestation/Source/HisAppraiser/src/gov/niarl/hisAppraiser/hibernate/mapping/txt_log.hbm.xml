@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.TxtLog" table="txt_log">
+		<id name="id" column="id" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<many-to-one name="measureLog" column="measure_id" class="gov.niarl.hisAppraiser.hibernate.domain.MeasureLog" unique="true"/>
+		<property name="osSinitDataCapabilities" column="os_sinit_data_capabilities"/>
+		<property name="version" column="version"/>
+		<property name="sinitHash" column="sinit_hash"/>
+		<property name="edxSenterFlags" column="edx_senter_flags"/>
+		<property name="biosAcmId" column="bios_acm_id"/>
+		<property name="msegValid" column="mseg_valid"/>
+		<property name="stmHash" column="stm_hash"/>
+		<property name="policyControl" column="policy_control"/>
+		<property name="lcpPolicyHash" column="lcp_policy_hash"/>
+		<property name="processorScrTmStatus" column="processor_scr_tm_status"/>
+		<property name="mleHash" column="mle_hash"/>
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,75 @@
+#!/bin/bash
+#create os script
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+HOST_NAME=""
+INFO=""
+PORT=8443
+
+ShowExample()
+{
+  echo -e "Add  OS example:\033[31;49;5;1m bash oat_os -a -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"OS_NAME","Version":"OS_VERSION","Description":"DESCRIPTION"}'\033[0m"
+  echo -e "Edit OS example:\033[31;49;5;1m bash oat_os -e -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"OS_NAME","Version":"OS_VERSION","Description":"Mooooooooodify"}'\033[0m"
+  echo -e "Del  OS example:\033[31;49;5;1m bash oat_os -d -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"OS_NAME","Version":"OS_VERSION"}'\033[0m"
+}
+
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowExample
+  exit 0
+fi
+
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ $1 == $DEL_PARM ];then
+  INFO="`echo "$4" | awk -F{ '{print $2}' | awk -F} '{print $1}' |  awk -F, '{print $1$2}' | \
+         sed 's/\":\"/=/g' | sed 's/\"\"/\&/g' | sed 's/\"//g' | sed 's/ /%20/g'`"
+else
+  INFO="$4"
+fi
+
+addOS() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/os"
+}
+
+editOS()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/os"
+}
+
+delOS()
+{
+  curl --cacert certfile.cer \
+        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/os?$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add OS:"
+           addOS
+      ;;
+      $EDIT_PARM)
+           echo "edit OS:"
+           editOS
+      ;;
+      $DEL_PARM)
+           echo "del OS:"
+           delOS
+      ;;
+      *)
+      echo "Usage oat_os {-a|-e|-d}"
+      ShowExample
+      exit 3
+esac
+echo -e "\n"

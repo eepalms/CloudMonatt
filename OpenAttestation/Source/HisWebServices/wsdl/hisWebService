@@ -1,0 +1,50 @@
+<html>
+<head><title>
+Web Services
+</title></head>
+<body>
+<h1>Web Services</h1>
+<table width='100%' border='1'>
+<tr>
+<td>
+Endpoint
+</td>
+<td>
+Information
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisWebServiceFactoryServiceService</td></tr><tr><td>Port Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisWebServiceFactoryServicePort</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisWebServiceFactoryService</td></tr><tr><td>WSDL:</td><td><a href="hisWebServiceFactoryService.wsdl">hisWebServiceFactoryService.wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.sal.webservices.hisWebService.server.HisWebServiceFactoryService</td></tr></table>
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisWebServiceService</td></tr><tr><td>Port Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisWebServicePort</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisWebService</td></tr><tr><td>WSDL:</td><td><a href="hisWebService.wsdl">hisWebService.wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.sal.webservices.hisWebService.server.HisWebService</td></tr></table>
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisEnrollmentWebServiceService</td></tr><tr><td>Port Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisEnrollmentWebServicePort</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisEnrollmentWebService</td></tr><tr><td>WSDL:</td><td><a href="hisEnrollmentWebService.wsdl">hisEnrollmentWebService.wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.sal.webservices.hisWebService.server.HisEnrollmentWebService</td></tr></table>
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisPollingWebServiceService</td></tr><tr><td>Port Name:</td><td>{http://server.hisWebService.webservices.sal.niarl.gov/}HisPollingWebServicePort</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisPollingWebService</td></tr><tr><td>WSDL:</td><td><a href="hisPollingWebService.wsdl">hisPollingWebService.wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.sal.webservices.hisWebService.server.HisPollingWebService</td></tr></table>
+</td>
+</tr>
+</table>
+</body>
+</html>

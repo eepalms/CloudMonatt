@@ -1,0 +1,80 @@
+#!/bin/bash
+#create mles script
+
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+HOST_NAME=""
+INFO=""
+PORT=8443
+ShowMleExample()
+{
+  echo "MLE with VMM:"
+  echo -e "Add  MLE example:\n\033[31;49;5;1m bash oat_mle -a -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"MLE_NAME","Version":"MLE_VERSION","OsName":"OS_NAME","OsVersion":"OS_VERSION","Attestation_Type": "PCR","MLE_Type":"VMM","Description":"DESCRIPTION","MLE_Manifests": [{"Name": "PCR_NUM",  "Value": "PCR_VALUE"}]}' \033[0m"
+  echo -e "Edit MLE example:\n\033[31;49;5;1m bash oat_mle -e -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"MLE_NAME","Version":"MLE_VERSION","OsName":"OS_NAME","OsVersion":"OS_VERSION","Attestation_Type": "PCR","MLE_Type":"VMM","Description":"DESCRIPTION","MLE_Manifests": [{"Name": "PCR_NUM",  "Value": "PCR_VALUE"}]}' \033[0m"
+  echo -e "Del  MLE example:\n\033[31;49;5;1m  bash oat_mle -d -h HOSTNAME_OF_OAT-APPRAISER '{"mleName":"MLE_NAME","mleVersion":"MLE_VERSION","osName":"OS_NAME","osVersion":"OS_VERSION"}'\033[0m"
+  echo "MLE with BIOS:"
+  echo -e "Add  MLE example:\n\033[31;49;5;1m bash oat_mle -a -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"MLE_NAME","Version":"MLE_VERSION","OemName":"OEM1","Attestation_Type": "PCR","MLE_Type":"BIOS","Description":"MLEDESCRIPTION1111","MLE_Manifests": [{"Name": "PCR_NUM",  "Value": "PCR_VALUE"}]}' \033[0m"
+  echo -e "Edit MLE example:\n\033[31;49;5;1m  bash oat_mle -e -h HOSTNAME_OF_OAT-APPRAISER '{"Name":"MLE_NAME","Version":"MLE_VERSION","OemName":"OEM1","Attestation_Type": "PCR","MLE_Type":"BIOS","Description":"DESCRIPTION","MLE_Manifests": [{"Name": "PCR_NUM",  "Value": "PCR_VALUE"}]}'\033[0m"
+  echo -e "Del  MLE example:\n\033[31;49;5;1m  bash oat_mle -d -h HOSTNAME_OF_OAT-APPRAISER '{"mleName":"MLE_NAME","mleVersion":"MLE_VERSION","oemName":"OEM1"}'\033[0m"
+}
+
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowMleExample
+  exit 0
+fi
+
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowMleExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ $1 == $DEL_PARM ];then
+  INFO="`echo "$4" | awk -F{ '{print $2}'| awk -F} '{print $1}'\
+        | sed 's/\"//g' | sed 's/:/=/g' | sed 's/,/\&/g'| sed 's/ /%20/g'`"
+else
+  INFO="$4"
+fi
+
+addMLE() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/mles"
+}
+
+editMLE()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/mles"
+}
+
+delMLE()
+{
+  curl --cacert certfile.cer \
+        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/mles?$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add MLE:"
+           addMLE
+      ;;
+      $EDIT_PARM)
+           echo "edit MLE:"
+           editMLE
+      ;;
+      $DEL_PARM)
+           echo "del MLE:"
+           delMLE
+      ;;
+      *)
+      echo "Usage oat_mles {-a|-e|-d}"
+      ShowMleExample
+      exit 3
+esac
+echo -e "\n"

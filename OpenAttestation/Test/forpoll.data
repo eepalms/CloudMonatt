@@ -1,0 +1,6 @@
+###### Add machine and pcrs info as below
+Machine_Name=
+PCR_Num_for_BIOS=
+PCR_Value_for_BIOS=
+PCR_Num_for_VMM=
+PCR_Value_for_VMM=

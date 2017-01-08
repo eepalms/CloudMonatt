@@ -1,0 +1,79 @@
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          CERT                                                    ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+bash oat_cert -h his8
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          OEM                                                     ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+bash oat_oem -a -h his8 '{"Name":"OEM1","Description":"Newdescription"}'
+
+bash oat_oem -e -h his8 '{"Name":"OEM1","Description":"Mooooooooodify"}'
+
+bash oat_oem -d -h his8 '{"Name":"OEM1"}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                           OS                                                     ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+bash oat_os -a -h his8 '{"Name":"OS1","Version":"v1","Description":"Test1"}'
+
+bash oat_os -e -h his8 '{"Name":"OS1","Version":"v1","Description":"Mooooooooodify"}'
+
+bash oat_os -d -h his8 '{"Name":"OS1","Version":"v1"}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                           MLE                                                    ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+#VMM
+bash oat_mle -a -h his8 '{"Name":"NewMLE2","Version":"v123","OsName":"OS1","OsVersion":"v1","Attestation_Type": "PCR","MLE_Type":"VMM","Description":"Test","MLE_Manifests": [{"Name": "18",  "Value": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"}]}'
+
+#BIOS
+bash oat_mle -a -h his8 '{"Name":"NewMLE1","Version":"v123","OemName":"OEM1","Attestation_Type": "PCR","MLE_Type":"BIOS","Description":"MLETest1111","MLE_Manifests": [{"Name": "0",  "Value": "31B97D97B4679917EC3C1D943635693FFBAB4143"}]}'
+
+bash oat_mle -e -h his8 '{"Name":"NewMLE1","Version":"v123","OemName":"OEM1","Attestation_Type": "PCR","MLE_Type":"BIOS","Description":"###############","MLE_Manifests": [{"Name": "0",  "Value": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"}]}'
+
+bash oat_mle -d -h his8 '{"mleName":"NewMLE1","mleVersion":"v123","oemName":"OEM1"}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          HOST                                                    ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+bash oat_host -a -h his8 '{"HostName":"his8","IPAddress":"192.168.1.1","Port":"9999","BIOS_Name":"NewMLE1","BIOS_Version":"v123","BIOS_Oem":"OEM1","VMM_Name":"NewMLE2","VMM_Version":"v123","VMM_OSName":"OS1","VMM_OSVersion":"v1","Email":"","AddOn_Connection_String":"","Description":""}'
+
+bash oat_host -e -h his8 '{"HostName":"his8","IPAddress":"192.168.1.1","Port":"9999","BIOS_Name":"NewMLE1","BIOS_Version":"v123","BIOS_Oem":"OEM1","VMM_Name":"NewMLE2","VMM_Version":"v123","VMM_OSName":"OS1","VMM_OSVersion":"v1","Email":"quan.xu@intel.com","AddOn_Connection_String":"Moooooodify","Description":"Y"}'
+
+bash oat_host -d -h his8 '{"hostName":"his8"}'
+
+bash oat_host -s -h his8 '{rhel}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          POLLHOSTS                                               ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+bash oat_pollhosts -h his8 '{"hosts":["his8"]}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          PCR_WHITE_LIST                                          ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+#oem
+bash oat_pcrwhitelist -a -h his8 '{"pcrName":"8","pcrDigest":"DE1343582097C9BC739C9311D60B5B5F5603A", "mleName":"NewMLE1","mleVersion":"v123", "oemName": "OEM1"}'
+bash oat_pcrwhitelist -e -h his8 '{"pcrName":"8","pcrDigest":"###########################", "mleName":"NewMLE1","mleVersion":"v123", "oemName": "OEM1"}'
+bash oat_pcrwhitelist -d -h his8 '{"pcrName":"8","mleName":"NewMLE1","mleVersion":"v123","oemName":"OEM1"}'
+
+#os
+bash oat_pcrwhitelist -a -h his8 '{"pcrName":"5","pcrDigest":"DE1343582097C9BC739C9311D60B5B5F5603A","mleName":"NewMLE2","mleVersion":"v123","osName":"OS1","osVersion":"v1"}'
+bash oat_pcrwhitelist -e -h his8 '{"pcrName":"5","pcrDigest":"###########################", "mleName":"NewMLE2","mleVersion":"v123","osName":"OS1","osVersion":"v1"}'
+bash oat_pcrwhitelist -d -h his8 '{"pcrName":"5","mleName":"NewMLE2","mleVersion":"v123","osName":"OS1","osVersion":"v1"}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          VIEW                                                    ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+
+bash oat_view_os  -h his8
+bash oat_view_oem -h his8
+bash oat_view_mle -h his8 '{"mleName":"NewMLE1","mleVersion":"v123","oemName":"OEM1"}'
+
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+^*                                          MLE_SEARCH                                              ^*
+^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*^*
+
+bash oat_mle_search -h his8 '{OEM1}'

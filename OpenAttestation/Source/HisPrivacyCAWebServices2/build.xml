@@ -1,0 +1,119 @@
+<project name="HisPrivacyCAWebServices2" basedir="./" default="server">
+
+	<path id="compile.classpath">
+		<pathelement path="${classpath}" />
+		<pathelement path="${java.class.path}" />
+		<fileset dir="./WEB-INF/lib">
+			<include name="**/*.jar" />
+			<include name="**/*.zip" />
+		</fileset>
+		<fileset dir="./WEB-INF/jars-compile-only">
+			<include name="**/*.jar" />
+			<include name="**/*.zip" />
+		</fileset>
+	</path>
+
+	<path id="client.compile.classpath">
+		<pathelement path="${classpath}" />
+		<pathelement path="${java.class.path}" />
+		<fileset dir="./clientlib">
+			<include name="**/*.jar" />
+			<include name="**/*.zip" />
+		</fileset>
+	</path>
+
+	<taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
+		<classpath>
+			<path refid="client.compile.classpath" />
+		</classpath>
+	</taskdef>
+
+	<!-- Build project and create distribution-->
+	<target name="server">
+		<!-- Timestamp for potential use in filenames below-->
+		<tstamp />
+
+		<!-- Clean and copy non java files-->
+		<delete dir="./WEB-INF/classes" />
+		<mkdir dir="./WEB-INF/classes" />
+		<copy todir="./WEB-INF/classes">
+			<fileset dir="./src">
+				<patternset>
+					<exclude name="**/*.java" />
+				</patternset>
+			</fileset>
+		</copy>
+		<!-- Compile-->
+		<javac debug="true" destdir="./WEB-INF/classes" srcdir="./src"
+               source="1.5" target="1.5"
+               includes="**/*.java" excludes="**/hisPrivacyCAWebService2/client/,Main.java">
+			<classpath>
+				<path refid="compile.classpath" />
+			</classpath>
+		</javac>
+
+		<!-- Build-->
+		<delete file="./HisPrivacyCAWebServices2.war" />
+		<jar jarfile="./HisPrivacyCAWebServices2.war">
+			<fileset dir="./">
+				<exclude name="src/" />
+				<exclude name="WEB-INF/jars-compile-only/" />
+				<exclude name=".classpath" />
+				<exclude name=".project" />
+				<exclude name="build.xml" />
+				<exclude name="clientlib/" />
+				<patternset>
+					<exclude name="**/*.java" />
+				</patternset>
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- Build jar from axis directory-->
+	<target name="client">
+		<delete dir="client" />
+		<mkdir dir="client" />
+		<delete dir="clientsrc" />
+		<mkdir dir="clientsrc" />
+		<delete dir="clientlib/HisPrivacyCAWebServices2-client.jar" />
+		<wsimport 
+			debug="true" 
+			verbose="true" 
+			keep="true" 
+			sourcedestdir="clientsrc" 
+			package="gov.niarl.his.webservices.hisPrivacyCAWebServices2.clientWsImport"
+			wsdl="${basedir}/wsdl/hisPrivacyCAWebService2.wsdl"
+			xnocompile="true" />
+		<wsimport 
+			debug="true" 
+			verbose="true" 
+			keep="true" 
+			sourcedestdir="clientsrc" 
+			package="gov.niarl.his.webservices.hisPrivacyCAWebServices2.clientWsImport"
+			wsdl="${basedir}/wsdl/hisPrivacyCAWebService2FactoryService.wsdl"
+			xnocompile="true" />
+		<javac debug="true" destdir="client"
+			source="1.5" target="1.5">
+			<src path="src"/>
+			<src path="clientsrc"/>
+			<include name="**/hisPrivacyCAWebService2/client/**/*.java"/>
+			<include name="**/hisPrivacyCAWebService2/*,Main.java"/>
+			<include name="**/clientWsImport/*"/>
+			<classpath>
+				<path refid="client.compile.classpath" />
+				<pathelement path="client"/>
+			</classpath>
+		</javac>
+		<jar jarfile="clientlib/HisPrivacyCAWebServices2-client.jar" basedir="client" />
+		<delete dir="client" />
+	</target>
+
+	<target name="clientInvoker">
+		<java classname="Main" fork="true">
+			<classpath>
+				<path refid="client.compile.classpath" />
+			</classpath>
+		</java>
+	</target>
+
+</project>

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.intel.openAttestation.manifest.hibernate.domain.OEM" table="OEM">
+		<id name="OEMID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<property name="Name" column="NAME"/>
+		<property name="Description" column="DESCRIPTION"/>
+	</class>
+</hibernate-mapping>

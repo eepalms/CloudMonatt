@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="com.intel.openAttestation.manifest.hibernate.domain.MLE" table="MLE">
+		<id name="MLEID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<property name="Name" column="NAME"/>
+		<property name="Version" column="VERSION"/>
+		<many-to-one name="oem" class="com.intel.openAttestation.manifest.hibernate.domain.OEM" column="OEM_ID"/>
+		<many-to-one name="os" class="com.intel.openAttestation.manifest.hibernate.domain.OS" column="OS_ID"/>
+		<property name="Attestation_Type" column="ATTESTATION_TYPE"/>
+		<property name="MLE_Type" column="MLE_TYPE"/>
+		<property name="Description" column="DESCRIPTION"/>
+		
+	</class>
+</hibernate-mapping>

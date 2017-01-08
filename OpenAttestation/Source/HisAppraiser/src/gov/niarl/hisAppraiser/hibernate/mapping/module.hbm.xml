@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.Module" table="module">
+		<id name="id" column="id" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<many-to-one name="measureLog" column="measure_id" class="gov.niarl.hisAppraiser.hibernate.domain.MeasureLog"/>
+		<property name="moduleName" column="module_name"/>
+		<property name="moduleValue" column="module_value"/>
+		<property name="pcrNumber" column="pcr_number"/>
+	</class>
+</hibernate-mapping>

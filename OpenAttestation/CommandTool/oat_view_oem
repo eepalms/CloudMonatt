@@ -1,0 +1,43 @@
+#!/bin/bash
+#oem view
+PARM="-h"
+PORT="8443"
+ShowOemViewExample()
+{
+   echo -e "Oem View example:\n\033[31;49;5;1m bash oat_view_oem -h HOSTNAME_OF_OAT-APPRAISER\033[0m"
+}
+
+if [ $# -lt 2 ];then
+  echo "parm num error!"
+  ShowOemViewExample
+  exit 0
+fi
+if [ $1 != $PARM ];then
+  echo "parm error!"
+  ShowOemViewExample
+  exit 0
+fi
+
+HOST_NAME="$2"
+view_oem()
+{
+     res=`ping -c 1 $HOST_NAME > /dev/null 2>&1` 
+     if [ $? != 0 ];then
+       echo "host is unreachable"
+       exit 0
+     fi
+     if [ -z $HOST_NAME ];then
+       echo "invalid hostname"
+       exit 0
+     fi
+     len=`expr length $HOST_NAME`
+     if [ $len -gt 50 ];then
+       echo "size of host name exceeds the max number allowed"
+       exit 0
+     fi
+     curl --cacert ./certfile.cer -H "Content-Type: application/json" \
+     -X GET https://$HOST_NAME:$PORT/WLMService/resources/oem
+}
+
+view_oem
+echo -e "\n"

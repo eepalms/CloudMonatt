@@ -1,0 +1,34 @@
+<html>
+<head><title>
+Web Services
+</title></head>
+<body>
+<h1>Web Services</h1>
+<table width='100%' border='1'>
+<tr>
+<td>
+Endpoint
+</td>
+<td>
+Information
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/}HisPrivacyCAWebService2FactoryServiceService</td></tr><tr><td>Port Name:</td><td>{http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/}HisPrivacyCAWebService2FactoryServicePort</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisPrivacyCAWebService2FactoryService</td></tr><tr><td>WSDL:</td><td><a href="hisPrivacyCAWebService2FactoryService?wsdl">hisPrivacyCAWebService2FactoryService?wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.his.webservices.hisPrivacyCAWebService2.server.HisPrivacyCAWebService2FactoryService</td></tr></table>
+</td>
+</tr>
+<tr>
+<td>
+<table border="0"><tr><td>Service Name:</td><td>{http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/}HisPrivacyCAWebService2Service</td></tr><tr><td>Port Name:</td><td>{http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/}HisPrivacyCAWebService2Port</td></tr></table>
+</td>
+<td>
+<table border="0"><tr><td>Address:</td><td>hisPrivacyCAWebService2</td></tr><tr><td>WSDL:</td><td><a href="hisPrivacyCAWebService2?wsdl">hisPrivacyCAWebService2?wsdl</a></td></tr><tr><td>Implementation class:</td><td>gov.niarl.his.webservices.hisPrivacyCAWebService2.server.HisPrivacyCAWebService2</td></tr></table>
+</td>
+</tr>
+</table>
+</body>
+</html>

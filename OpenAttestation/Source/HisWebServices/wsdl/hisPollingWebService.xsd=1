@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://server.hisWebService.webservices.sal.niarl.gov/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://server.hisWebService.webservices.sal.niarl.gov/">
+
+<xs:element name="getNextAction" type="tns:getNextAction" />
+
+<xs:element name="getNextActionResponse" type="tns:getNextActionResponse" />
+
+<xs:complexType name="getNextAction">
+<xs:sequence>
+<xs:element name="machineName" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getNextActionResponse">
+<xs:sequence>
+<xs:element name="nextAction" type="tns:actionDelay" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="actionDelay">
+<xs:sequence>
+<xs:element name="action" type="tns:action" minOccurs="0" />
+<xs:element name="args" type="xs:string" minOccurs="0" />
+<xs:element name="delayMilliseconds" type="xs:long" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="action">
+<xs:restriction base="xs:string">
+<xs:enumeration value="DO_NOTHING" />
+<xs:enumeration value="SEND_REPORT" />
+<xs:enumeration value="REBOOT" />
+<xs:enumeration value="VERIFY_CLIENT" />
+<xs:enumeration value="CLEAN_CLIENT" />
+</xs:restriction>
+</xs:simpleType>
+</xs:schema>

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.HOST" table="HOST">
+		<id name="ID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<property name="HostName" column="HOST_NAME"/>
+		<property name="IPAddress" column="IP_ADDRESS"/>
+		<property name="Port" column="PORT"/>
+		<property name="Email" column="EMAIL"/>
+		<property name="AddOn_Connection_String" column="ADDON_CONNECTION_STRING"/>
+		<property name="Description" column="DESCRIPTION"/>
+	</class>
+</hibernate-mapping>

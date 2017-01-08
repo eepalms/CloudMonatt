@@ -1,0 +1,119 @@
+#!/bin/sh
+#
+# "$Id: catalina ,v 1.0 2010/08/10 Chris_g Exp $"
+#
+#   Startup/shutdown script for tomcat(Catalina) Application server.
+#
+#   Linux chkconfig stuff:
+#
+#   chkconfig: 2345 56 10
+#   description: Startup/shutdown script for the tomcat application server.
+######
+
+# Source function library.
+######
+
+
+# Define where the catalina.sh script is located.
+######
+CATALINA_BIN="/usr/lib/apache-tomcat-6.0.29/bin/startup.sh";
+#CATALINA_BIN='/usr/lib/apache-tomcat-6.0.29/bin/catalina.sh 1> /dev/null';
+
+# Find the catalina process using ps / awk.
+# The match function will return 0 when no match is found with the string "java".
+# Position $9 should contain the path to the Java executable used by catalina.
+######
+PROC=`ps -efc | grep apache.catalina | awk 'BEGIN { FS=" "}; { if( match($9, "java") != 0 ) print $9;}'`
+TOMCAT_PIDFILE=/var/run/tomcat6.init.pid
+# Replace a potential empty string with a fake process so the RH daemon functions are able to parse
+# it properly
+######
+if [ $PROC ];then
+        TOMCAT_PID=`ps -efc | grep apache.catalina | awk 'BEGIN { FS=" "}; { if( match($9, "java") != 0 ) print $2;}'`
+else
+        TOMCAT_PID=0
+fi
+
+if [[ "$PROC" == '' ]]; then
+    PROC='Tomcat_JVM';
+fi
+
+# Define the application name that is listed in the daemonize step.
+PROG='Tomcat JVM';
+
+# LOCKFILE
+LOCK='/var/lock/subsys/tomcat';
+
+start () {
+        echo -n $"Starting $PROG: "
+        if [ $TOMCAT_PID -ne 0 ];then
+		TOMCAT_PID=`cat $TOMCAT_PIDFILE`
+		echo -ne "\033[31m \t [ failed ] \033[0m"
+		echo
+		echo -n "The process $TOMCAT_PID is running..."
+	else
+		$CATALINA_BIN 1> /dev/null
+		RETVAL=$?
+		if [ $RETVAL -eq 0 ];then
+			echo -ne "\033[32m \t [ successed ] \033[0m"
+			ps -efc | grep apache.catalina | awk 'BEGIN { FS=" "}; { if( match($9, "java") != 0 ) print $2;}' > $TOMCAT_PIDFILE
+		fi
+	fi
+       	echo
+       	[ $RETVAL=0 ] && touch $LOCK
+       	return $RETVAL
+}
+
+stop () {
+        # stop daemon
+        echo -n "Stopping $PROG: "
+        killproc -p $TOMCAT_PIDFILE -TERM $PROC 2> /dev/null
+	if [ $? -eq 0 ];then
+		echo -ne "\033[32m \t [ successed ] \033[0m"
+	else
+		echo -ne "\033[31m \t [ failed ] \033[0m"
+	fi
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && rm -f $LOCK
+}
+
+restart() {
+        stop
+        start
+}
+
+status(){
+	echo -n "Service tomcat6 status:"
+	checkproc -p $TOMCAT_PIDFILE $PROC
+	if [ $? -eq 0 ];then
+		TOMCAT_PID=`cat $TOMCAT_PIDFILE`
+                echo -ne "\033[32m [ actived ] \033[0m \n"
+		echo -n "The process $TOMCAT_PID is running..."
+        else
+                echo -n "[ inactived ]"
+	fi
+	RETVAL=$?
+	echo 
+}
+case $1 in
+        start)
+                start
+        ;;
+        stop)
+                stop
+        ;;
+        restart)
+                restart
+        ;;
+        status)
+                status 
+        ;;
+        *)
+
+        echo $"Usage: $prog {start|stop|restart|status}"
+        exit 3
+esac
+
+exit $RETVAL
+

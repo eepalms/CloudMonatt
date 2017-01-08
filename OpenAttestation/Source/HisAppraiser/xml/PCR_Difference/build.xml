@@ -1,0 +1,36 @@
+<project name="PCR_Difference" basedir="./" default="Build">
+       <path id="compile.classpath">
+                <pathelement path="${classpath}" />
+                <fileset dir="../../lib">
+                        <include name="**/*.jar" />
+                        <include name="**/*.zip" />
+                </fileset>
+        </path>
+
+
+	<taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+		<classpath refid="compile.classpath" />
+	</taskdef>
+
+
+	<!-- Build project and create distribution-->
+	<target name="Build">
+		<delete dir="src" />
+		<mkdir dir="src" />
+		<xjc destdir="src">
+			<schema dir="./">
+				<include name="PCR_Difference.xsd" />
+				<include name="PCR_DifferenceXMLSchema.xsd" />
+			</schema>
+			<binding dir="./">
+				<include name="PCR_Difference.binding.xjb.xml" />
+			</binding>
+		</xjc>
+        <!-- Clean and copy java files-->
+        <delete dir="../../src/gov/niarl/his/xsd/pcr_difference" />
+        <copy todir="../../src/gov/niarl/his/xsd">
+            <fileset dir="./src/gov/niarl/his/xsd"/>                                                
+        </copy>
+	</target>
+
+</project>

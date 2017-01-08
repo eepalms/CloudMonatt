@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.HOST_MLE" table="HOST_MLE">
+		<id name="ID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<many-to-one name="host" class="gov.niarl.hisAppraiser.hibernate.domain.HOST" column="HOST_ID"/>
+		<many-to-one name="mle" class="gov.niarl.hisAppraiser.hibernate.domain.MLE" column="MLE_ID"/>
+	</class>
+</hibernate-mapping>

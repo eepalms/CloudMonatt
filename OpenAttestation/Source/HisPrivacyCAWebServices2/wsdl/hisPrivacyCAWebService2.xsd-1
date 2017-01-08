@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://server.hisPrivacyCAWebService2.webservices.his.niarl.gov/">
+
+<xs:element name="identityRequestGetChallenge" type="tns:identityRequestGetChallenge" />
+
+<xs:element name="identityRequestGetChallengeResponse" type="tns:identityRequestGetChallengeResponse" />
+
+<xs:element name="identityRequestSubmitResponse" type="tns:identityRequestSubmitResponse" />
+
+<xs:element name="identityRequestSubmitResponseResponse" type="tns:identityRequestSubmitResponseResponse" />
+
+<xs:element name="requestGetEC" type="tns:requestGetEC" />
+
+<xs:element name="requestGetECResponse" type="tns:requestGetECResponse" />
+
+<xs:complexType name="requestGetEC">
+<xs:sequence>
+<xs:element name="encryptedEkMod" type="tns:byteArray" minOccurs="0" />
+<xs:element name="arg1" type="tns:byteArray" minOccurs="0" />
+<xs:element name="arg2" type="xs:int" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="byteArray">
+<xs:sequence>
+<xs:element name="bytes" type="xs:base64Binary" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="requestGetECResponse">
+<xs:sequence>
+<xs:element name="requestGetEC" type="tns:byteArray" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="identityRequestSubmitResponse">
+<xs:sequence>
+<xs:element name="identityRequestResponseToChallenge" type="tns:byteArray" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="identityRequestSubmitResponseResponse">
+<xs:sequence>
+<xs:element name="encryptedCertificate" type="tns:byteArray" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="identityRequestGetChallenge">
+<xs:sequence>
+<xs:element name="identityRequest" type="tns:byteArray" minOccurs="0" />
+<xs:element name="endorsementCertificate" type="tns:byteArray" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="identityRequestGetChallengeResponse">
+<xs:sequence>
+<xs:element name="identityRequestChallenge" type="tns:byteArray" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>
