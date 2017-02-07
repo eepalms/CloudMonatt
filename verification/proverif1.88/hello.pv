@@ -1,0 +1,25 @@
+(* attest.pv: Script for cloud attestation *)
+
+free c: channel.
+free s: bitstring [private].
+event acceptsClient ().
+event acceptsServer().
+event termClient().
+event termServer().
+
+query event(acceptsClient()).
+query event(acceptsServer()).
+
+let clientA(m:bitstring) = 
+  out (c, m) ;
+  in (c,x:bitstring);
+  event acceptsClient().
+
+let serverB(m:bitstring) = 
+  out (c, m);
+  in (c, x:bitstring);
+  event acceptsServer().
+
+process
+clientA(s) | serverB(s)
+

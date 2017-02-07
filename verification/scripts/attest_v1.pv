@@ -1,0 +1,249 @@
+(* attest.pv: Script for cloud attestation *)
+
+(* -----Symmetric key encryption----- *)
+
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+(* -----Asymmetric key encryption----- *)
+
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, sk: skey; adec(aenc(m,pk(sk)),sk) = m.
+
+(* -----Digital signatures----- *)
+
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey; getmess(sign(m, sk)) = m.
+reduc forall m: bitstring, sk: skey; checksign(sign(m, sk), pk(sk)) = m.
+
+(* -----One-way hash function----- *)
+
+fun hash(bitstring):bitstring.
+fun hash1(bitstring, bitstring): bitstring.
+
+(* -----Other typs and Some type conversion----- *)
+
+fun key2str(pkey): bitstring.
+reduc forall pk_x: pkey; str2key(key2str(pk_x)) = pk_x.
+
+fun interpret(bitstring, bitstring): bitstring.
+
+
+(* ----- Variables and events----- *)
+
+free cust_ctrl: channel.
+free ctrl_server: channel.
+free server_client: channel.
+free client_pca: channel.
+free pca_server: channel.
+free broadcast: channel.
+
+free esk_client: skey [private].
+free sk_client: skey [private].
+free sk_pca: skey [private].
+free sk_customer: skey [private].
+free sk_controller: skey [private].
+free sk_server: skey [private].
+
+free property: bitstring [private].
+free measure: bitstring [private].
+
+event report_wrong().
+event report_right().
+
+event property_right().
+event property_wrong().
+
+event measure_right().
+event measure_wrong().
+
+event customer_controller_certify().
+event customer_request().
+event customer_response().
+
+event controller_customer_certify().
+event controller_server_certify().
+event controller_recvd().
+event controller_request().
+event controller_response().
+
+event server_controller_certify().
+event server_client_certify().
+event server_recvd().
+event server_request().
+event server_response().
+
+event client_keygen().
+event client_recvd().
+event client_response().
+
+event pca_certify().
+
+event debug1().
+event debug2().
+
+(* -----securecy----- *)
+
+query attacker(property).
+
+query attacker(interpret(measure, property)).
+
+query attacker(esk_client).
+query attacker(sk_client).
+query attacker(sk_pca).
+query attacker(sk_customer).
+query attacker(sk_controller).
+query attacker(sk_server).
+
+(* -----integrity for the message----- *)
+
+query event(property_wrong()).
+query event(property_right()).
+query event(report_wrong()).
+query event(report_right()).
+query event(measure_wrong()).
+query event(measure_right()).
+
+
+(* -----authentication----- *)
+
+query inj-event(customer_response()) ==> inj-event(controller_customer_certify()).
+query inj-event(controller_response()) ==> inj-event(customer_controller_certify()).
+
+query inj-event(controller_response()) ==> inj-event(server_controller_certify()).
+query inj-event(server_response()) ==> inj-event(controller_server_certify()).
+
+query inj-event(server_response()) ==> inj-event(client_recvd()).
+
+(* -----Customer----- *)
+
+let customer_action(sk_customer: skey, pk_controller: pkey) = 
+  out (cust_ctrl, pk(sk_customer));
+  in (cust_ctrl, m: bitstring);
+  let y = adec(m, sk_customer) in
+    let (k_customer:key, =pk(sk_customer)) = checksign(y, pk_controller) in
+      event customer_controller_certify();
+
+  new nonce_customer:bitstring;
+  out (cust_ctrl, senc((property, nonce_customer), k_customer));
+  event customer_request();
+
+  in (cust_ctrl, m1: bitstring);
+  let (m2: bitstring, property_x: bitstring, =nonce_customer) = sdec(m1, k_customer) in
+    event customer_response();
+  if property_x <> property then
+    event property_wrong()
+  else event property_right();
+  if m2 <> interpret(measure, property) then
+    event report_wrong()
+  else event report_right().
+
+(* -----Controller----- *)
+
+let controller_action(sk_controller: skey, pk_customer: pkey, pk_server: pkey) =
+  in (cust_ctrl, =pk_customer);
+  new k_customer: key;
+  out (cust_ctrl, aenc(sign((k_customer, pk_customer), sk_controller), pk_customer));
+  event controller_customer_certify();
+
+  in (cust_ctrl, m1: bitstring);
+  let (property_x: bitstring, nonce_x: bitstring) = sdec(m1, k_customer) in
+    event controller_recvd();
+
+  out (ctrl_server, pk(sk_controller));
+  in (ctrl_server, m: bitstring);
+  let y = adec(m, sk_controller) in
+    let (k_controller:key, =pk(sk_controller)) = checksign(y, pk_server) in
+      event controller_server_certify();
+
+  new nonce_controller:bitstring;
+  out (ctrl_server, senc((property_x, nonce_controller), k_controller));
+  event controller_request();
+
+  in (ctrl_server, m2:bitstring);
+  let (m3:bitstring, =property_x, =nonce_controller) = sdec(m2, k_controller) in
+    event controller_response();
+
+  out (cust_ctrl, senc((m3, property_x, nonce_x), k_customer)).
+
+(* -----Attestation Server----- *)
+
+let server_action(pk_pca: pkey, pk_controller: pkey, sk_server: skey) = 
+  in (ctrl_server, =pk_controller);
+  new k_controller: key;
+  out (ctrl_server, aenc(sign((k_controller, pk_controller), sk_server), pk_controller));
+  event server_controller_certify();
+
+  in (ctrl_server, m3: bitstring);
+  let (property_x: bitstring, nonce_x:bitstring) = sdec(m3, k_controller) in
+    event server_recvd();
+
+  in (pca_server, m: bitstring);
+  let (k: pkey) = str2key(checksign(m, pk_pca)) in
+    event server_client_certify();
+ 
+  new nonce_server:bitstring;
+  out (server_client, aenc(nonce_server, k));
+  event server_request();
+
+  in (server_client, m1: bitstring);
+  let (m2:bitstring, =nonce_server, hash_measure:bitstring) = checksign(m1, k) in
+    if hash1(m2, nonce_server) = hash_measure then
+      event server_response();
+  if m2 <> measure then
+    event measure_wrong()
+  else event measure_right();
+
+  out (ctrl_server, senc((interpret(m2, property_x), property_x, nonce_x), k_controller)).
+
+(* -----Attestation Client----- *)
+
+let client_action(esk_client: skey, sk_client: skey) =
+  out (client_pca, sign(key2str(pk(sk_client)), esk_client));
+
+  in (server_client, m1: bitstring);
+  let (nonce_x: bitstring) = adec(m1, sk_client) in
+    event client_recvd();
+
+  out (server_client, sign((measure, nonce_x, hash1(measure, nonce_x)), sk_client));
+  event client_response().  
+
+(* -----Privacy Certificate Authority----- *)
+
+let pca_action(epk_client: pkey, sk_pca:skey) = 
+  in (client_pca, m: bitstring);
+  let (k: pkey) = str2key(checksign(m, epk_client)) in
+    event pca_certify();
+
+  out (pca_server, sign(key2str(k), sk_pca)).
+
+
+process
+
+let epk_client = pk(esk_client) in 
+  out (broadcast, (epk_client));
+
+let pk_client = pk(sk_client) in
+  event client_keygen();
+
+let pk_pca = pk(sk_pca) in
+  out (broadcast, (pk_pca));
+
+let pk_customer = pk(sk_customer) in
+  out (broadcast, (pk_customer));
+
+let pk_controller = pk(sk_controller) in
+  out (broadcast, (pk_controller));
+
+let pk_server = pk(sk_server) in
+  out (broadcast, (pk_server));
+
+(!customer_action(sk_customer, pk_controller)) |
+(!controller_action(sk_controller, pk_customer, pk_server)) |
+(!server_action(pk_pca, pk_controller, sk_server)) |
+(!client_action(esk_client, sk_client)) |
+(!pca_action(epk_client, sk_pca))

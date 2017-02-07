@@ -1,0 +1,203 @@
+(* attest.pv: Script for cloud attestation *)
+
+(* -----Symmetric key encryption----- *)
+
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+fun key2str(key): bitstring.
+reduc forall k_x: key; str2key(key2str(k_x)) = k_x.
+
+(* -----Asymmetric key encryption----- *)
+
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, sk: skey; adec(aenc(m,pk(sk)),sk) = m.
+
+fun pkey2str(pkey): bitstring.
+reduc forall pk_x: pkey; str2pkey(pkey2str(pk_x)) = pk_x.
+
+(* -----Digital signatures----- *)
+
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey; getmess(sign(m, sk)) = m.
+reduc forall m: bitstring, sk: skey; checksign(sign(m, sk), pk(sk)) = m.
+
+(* -----One-way hash function----- *)
+
+fun hash1(bitstring):bitstring.
+fun hash2(bitstring, bitstring): bitstring.
+fun hash3(bitstring, bitstring, bitstring): bitstring.
+fun hash4(bitstring, bitstring, bitstring, bitstring): bitstring.
+fun hash5(bitstring, bitstring, bitstring, bitstring, bitstring): bitstring.
+
+
+(* -----Property translation---- *)
+
+fun meareq2mea(bitstring): bitstring.
+
+(* ----- Variables and events----- *)
+
+free out_client: channel.
+free client_monitor: channel.
+free client_trust: channel.
+free monitor_trust: channel.
+free monitor_pca: channel.
+free trust_pca: channel.
+
+free kz: key.
+free sk_monitor: skey [private].
+free sk_trust: skey [private].
+free ask_trust: skey [private].
+free sk_pca: skey [private].
+
+
+free monitor_identify: bitstring.
+free trust_identify: bitstring.
+
+free vid: bitstring [private].
+free rM: bitstring [private].
+
+
+event sk_monitor_get_cert().
+event sk_trust_get_cert().
+
+event monitor_start_trust().
+event monitor_finish_trust().
+event trust_start_monitor().
+event trust_finish_monitor().
+
+event out_recvd().
+event client_recvd().
+event monitor_recvd().
+event trust_recvd().
+
+
+event M_modified().
+event M_unmodified().
+
+(* ----- Using reachiability to test the protocol ----- *)
+query event(sk_monitor_get_cert()).
+query event(sk_trust_get_cert()).
+
+query event(monitor_start_trust()).
+query event(monitor_finish_trust()).
+query event(trust_start_monitor()).
+query event(trust_finish_monitor()).
+
+query event(client_recvd()).
+query event(monitor_recvd()).
+query event(out_recvd()).
+
+(* ----- Verify the secrecy ----- *)
+query attacker(vid).
+
+
+(* ----- Verify integrity ----- *)
+query event(M_modified()).
+
+
+(* -----authentication----- *)
+
+query event(monitor_finish_trust()) ==> event(trust_start_monitor()).
+query event(trust_finish_monitor()) ==> event(monitor_start_trust()).
+
+
+
+(* -----Privacy Certificate Authority----- *)
+
+let pca_action(sk_pca:skey, pk_monitor:pkey, pk_trust:pkey) = 
+  out (monitor_pca, sign((monitor_identify, pkey2str(pk_monitor)), sk_pca));
+  out (trust_pca, sign((trust_identify, pkey2str(pk_trust)), sk_pca)).
+
+let out_action() = 
+  new nonce3: bitstring;
+  out (out_client, senc((vid, rM, nonce3), kz));
+
+  in (out_client, m1: bitstring);
+
+  let (=vid, =rM, M_1:bitstring,  =nonce3, hash_value: bitstring) = checksign(sdec(m1, kz), pk(ask_trust)) in
+    if hash4(vid, rM, M_1, nonce3) = hash_value then
+      event out_recvd();
+
+  if M_1 <> meareq2mea(rM) then
+    event M_modified()
+  else event M_unmodified().
+  
+
+let client_action() = 
+  in (out_client, m1: bitstring);
+
+  let (vid_1:bitstring, rM_1:bitstring, nonce3_1: bitstring) = sdec(m1, kz) in
+    event client_recvd();
+
+  out (client_monitor, (vid_1, rM_1, nonce3_1));
+
+  in (client_trust, m2: bitstring);
+  out (out_client, senc(m2, kz)).
+
+(* -----Monitor Module----- *)
+
+let monitor_action(sk_monitor: skey, pk_pca: pkey) =
+  new ki: key;
+  in (monitor_pca, sk_monitor_cert: bitstring);
+  let (=monitor_identify, =pkey2str(pk(sk_monitor))) = checksign(sk_monitor_cert, pk_pca) in
+    event sk_monitor_get_cert();
+
+  event monitor_start_trust();
+  out (monitor_trust, (pk(sk_monitor), sk_monitor_cert));
+  in (monitor_trust, m1: bitstring);
+  let (pk_trust: pkey, sk_trust_cert: bitstring) = m1 in
+    let (=trust_identify, = pkey2str(pk_trust)) = checksign(sk_trust_cert, pk_pca) in
+      out (monitor_trust, aenc(sign(key2str(ki), sk_monitor), pk_trust));
+
+  in (monitor_trust, m2: bitstring);
+  let y = adec(m2, sk_monitor) in
+    let (=ki) = str2key(checksign(y, pk_trust)) in
+      event monitor_finish_trust();
+
+  in (client_monitor, m3: bitstring);
+  let (vid_1:bitstring, rM_1:bitstring, nonce3_1:bitstring) = m3 in
+    event monitor_recvd();
+
+  out (monitor_trust, senc((vid_1, rM_1, meareq2mea(rM_1), nonce3_1), ki)).
+
+(* -----Trust Module----- *)
+
+let trust_action(sk_trust: skey, pk_pca: pkey) =
+  in (trust_pca, sk_trust_cert: bitstring);
+  let (=trust_identify, =pkey2str(pk(sk_trust))) = checksign(sk_trust_cert, pk_pca) in
+    event sk_trust_get_cert();
+
+  in (monitor_trust, m1: bitstring);
+  let (pk_monitor: pkey, sk_monitor_cert: bitstring) = m1 in
+    let (=monitor_identify, = pkey2str(pk_monitor)) = checksign(sk_monitor_cert, pk_pca) in
+      event trust_start_monitor();
+
+  out (monitor_trust, (pk(sk_trust), sk_trust_cert));
+
+  in (monitor_trust, m2: bitstring);
+  let y = adec(m2, sk_trust) in
+    let (ki:key) = str2key(checksign(y, pk_monitor)) in
+      event trust_finish_monitor();
+
+  out (monitor_trust, aenc(sign(key2str(ki), sk_trust), pk_monitor));
+
+  in (monitor_trust, m3: bitstring);
+
+  let (vid_1:bitstring, rM_1:bitstring, M_1:bitstring, nonce3_1: bitstring) = sdec(m3, ki) in
+    event trust_recvd();
+
+  out(client_trust, sign((vid_1, rM_1, M_1, nonce3_1, hash4(vid_1, rM_1, M_1, nonce3_1)), ask_trust)).
+
+
+process
+  (!pca_action(sk_pca, pk(sk_monitor), pk(sk_trust))) |
+  (!monitor_action(sk_monitor, pk(sk_pca))) |
+  (!trust_action(sk_trust, pk(sk_pca))) |
+  (!out_action()) |
+  (!client_action())
+

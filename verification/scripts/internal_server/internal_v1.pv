@@ -1,0 +1,246 @@
+(* attest.pv: Script for cloud attestation *)
+
+(* -----Symmetric key encryption----- *)
+
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+fun key2str(key): bitstring.
+reduc forall k_x: key; str2key(key2str(k_x)) = k_x.
+
+(* -----Asymmetric key encryption----- *)
+
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, sk: skey; adec(aenc(m,pk(sk)),sk) = m.
+
+fun pkey2str(pkey): bitstring.
+reduc forall pk_x: pkey; str2pkey(pkey2str(pk_x)) = pk_x.
+
+fun skey2str(skey): bitstring.
+reduc forall sk_x: skey; str2skey(skey2str(sk_x)) = sk_x.
+
+(* -----Digital signatures----- *)
+
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey; getmess(sign(m, sk)) = m.
+reduc forall m: bitstring, sk: skey; checksign(sign(m, sk), pk(sk)) = m.
+
+(* -----One-way hash function----- *)
+
+fun hash1(bitstring):bitstring.
+fun hash2(bitstring, bitstring): bitstring.
+fun hash3(bitstring, bitstring, bitstring): bitstring.
+fun hash4(bitstring, bitstring, bitstring, bitstring): bitstring.
+fun hash5(bitstring, bitstring, bitstring, bitstring, bitstring): bitstring.
+
+
+(* -----Property translation---- *)
+
+fun meareq2mea(bitstring, bitstring): bitstring.
+
+(* ----- Variables and events----- *)
+
+free out_client: channel.
+free client_kernel: channel.
+free kernel_tool: channel [private].
+free kernel_ter: channel.
+free kernel_crypto: channel.
+free crypto_ter: channel [private].
+free crypto_key: channel [private].
+free client_crypto: channel.
+free kernel_pca: channel.
+free crypto_pca: channel.
+
+free kz: key.
+free sk_kernel: skey [private].
+free sk_crypto: skey [private].
+free ask_trust: skey [private].
+free sk_pca: skey [private].
+
+
+free kernel_identify: bitstring.
+free crypto_identify: bitstring.
+
+free vid: bitstring [private].
+free rM: bitstring [private].
+
+
+event sk_kernel_get_cert().
+event sk_crypto_get_cert().
+
+event kernel_start_crypto().
+event kernel_finish_crypto().
+event crypto_start_kernel().
+event crypto_finish_kernel().
+
+
+event client_recvd().
+event kernel_recvd().
+event tool_recvd().
+event crypto_recvd().
+event out_recvd().
+
+event debug().
+event debug1().
+
+event M_modified().
+event M_unmodified().
+
+
+(* ----- Using reachiability to test the protocol ----- *)
+query event(sk_kernel_get_cert()).
+query event(sk_crypto_get_cert()).
+
+query event(kernel_start_crypto()).
+query event(kernel_finish_crypto()).
+query event(crypto_start_kernel()).
+query event(crypto_finish_kernel()).
+
+query event(M_modified()).
+query event(M_unmodified()).
+
+
+(* -----authentication----- *)
+
+query event(kernel_finish_crypto()) ==> event(crypto_start_kernel()).
+query event(crypto_finish_kernel()) ==> event(kernel_start_crypto()).
+
+
+
+(* -----Privacy Certificate Authority----- *)
+
+let pca_action(sk_pca:skey, pk_kernel:pkey, pk_crypto:pkey) = 
+  out (kernel_pca, sign((kernel_identify, pkey2str(pk_kernel)), sk_pca));
+  out (crypto_pca, sign((crypto_identify, pkey2str(pk_crypto)), sk_pca)).
+
+
+(* -----Out----- *)
+
+let out_action() =
+  new nonce3: bitstring;
+  out (out_client, senc((vid, rM, nonce3), kz));
+
+  in (out_client, m1: bitstring);
+
+  let (=vid, =rM, M_1:bitstring,  =nonce3, hash_value: bitstring) = checksign(sdec(m1, kz), pk(ask_trust)) in
+    if hash4(vid, rM, M_1, nonce3) = hash_value then
+      event out_recvd();
+
+
+  if M_1 <> meareq2mea(vid, rM) then
+    event M_modified()
+  else event M_unmodified().
+
+
+(* -----Attestation Client----- *)
+
+let client_action() =
+  in (out_client, m1: bitstring);
+
+  let (vid_1:bitstring, rM_1:bitstring, nonce3_1: bitstring) = sdec(m1, kz) in
+    event client_recvd();
+
+  out (client_kernel, (vid_1, rM_1, nonce3_1));
+
+  in (client_crypto, m2: bitstring);
+
+  out (out_client, senc(m2, kz)).
+
+
+(* -----Monitor Kernel----- *)
+
+let kernel_action(sk_kernel: skey, pk_pca: pkey) =
+  new ki: key;
+  in (kernel_pca, sk_kernel_cert: bitstring);
+  let (=kernel_identify, =pkey2str(pk(sk_kernel))) = checksign(sk_kernel_cert, pk_pca) in
+    event sk_kernel_get_cert();
+
+  event kernel_start_crypto();
+  out (kernel_crypto, (pk(sk_kernel), sk_kernel_cert));
+  in (kernel_crypto, m1: bitstring);
+  let (pk_crypto: pkey, sk_crypto_cert: bitstring) = m1 in
+    let (=crypto_identify, =pkey2str(pk_crypto)) = checksign(sk_crypto_cert, pk_pca) in
+      out (kernel_crypto, aenc(sign(key2str(ki), sk_kernel), pk_crypto));
+
+  in (kernel_crypto, m2: bitstring);
+  let y = adec(m2, sk_kernel) in
+    let (=ki) = str2key(checksign(y, pk_crypto)) in
+      event kernel_finish_crypto();
+
+  in (client_kernel, m3: bitstring);
+  let (vid_1:bitstring, rM_1:bitstring, nonce3_1:bitstring) = m3 in
+    event kernel_recvd();
+
+  out (kernel_tool, (vid_1, rM_1));
+
+  in (kernel_tool, m4: bitstring);
+  
+  out (kernel_ter, senc((vid_1, rM_1, m4, nonce3_1), ki)).
+
+
+(* -----Monitor Tools----- *)
+
+let tool_action() = 
+  in (kernel_tool, m1: bitstring);
+  let (vid_1:bitstring, rM_1:bitstring) = m1 in
+    event tool_recvd();
+
+  out (kernel_tool, meareq2mea(vid_1, rM_1)).
+
+
+(* -----Trust Evidence Register----- *)
+
+let ter_action() = 
+  in (kernel_ter, m1: bitstring);
+  out (crypto_ter, m1).
+
+(* -----Attest Keys----- *)
+
+let key_action() = 
+  out (crypto_key, skey2str(ask_trust)).
+
+
+(* -----Crypto Engine----- *)
+
+let crypto_action(sk_crypto: skey, pk_pca: pkey) =
+  in (crypto_pca, sk_crypto_cert: bitstring);
+  let (=crypto_identify, =pkey2str(pk(sk_crypto))) = checksign(sk_crypto_cert, pk_pca) in
+    event sk_crypto_get_cert();
+
+  in (kernel_crypto, m1: bitstring);
+  let (pk_kernel: pkey, sk_kernel_cert: bitstring) = m1 in
+    let (=kernel_identify, =pkey2str(pk_kernel)) = checksign(sk_kernel_cert, pk_pca) in
+      event crypto_start_kernel();
+
+  out (kernel_crypto, (pk(sk_crypto), sk_crypto_cert));
+
+  in (kernel_crypto, m2: bitstring);
+  let y = adec(m2, sk_crypto) in
+    let (ki:key) = str2key(checksign(y, pk_kernel)) in
+      event crypto_finish_kernel();
+
+  out (kernel_crypto, aenc(sign(key2str(ki), sk_crypto), pk_kernel));
+
+  in (crypto_ter, m3: bitstring);
+  in (crypto_key, m4: bitstring);
+
+  let ask_1 = str2skey(m4) in
+    let (vid_1:bitstring, rM_1:bitstring, M_1:bitstring, nonce3_1: bitstring) = sdec(m3, ki) in
+        event crypto_recvd();
+  
+  out(client_crypto, sign((vid_1, rM_1, M_1, nonce3_1, hash4(vid_1, rM_1, M_1, nonce3_1)), ask_1)).
+
+
+process
+  (!pca_action(sk_pca, pk(sk_kernel), pk(sk_crypto))) |
+  (!out_action()) |
+  (!client_action()) |
+  (!kernel_action(sk_kernel, pk(sk_pca))) |
+  (!tool_action()) |
+  (!crypto_action(sk_crypto, pk(sk_pca))) |
+  (!key_action()) |
+  (!ter_action())

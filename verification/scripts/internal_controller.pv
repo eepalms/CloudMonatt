@@ -1,0 +1,250 @@
+(* attest.pv: Script for cloud attestation *)
+
+(* -----Symmetric key encryption----- *)
+
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+fun key2str(key): bitstring.
+reduc forall k_x: key; str2key(key2str(k_x)) = k_x.
+
+(* -----Asymmetric key encryption----- *)
+
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, sk: skey; adec(aenc(m,pk(sk)),sk) = m.
+
+fun pkey2str(pkey): bitstring.
+reduc forall pk_x: pkey; str2pkey(pkey2str(pk_x)) = pk_x.
+
+(* -----Digital signatures----- *)
+
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey; getmess(sign(m, sk)) = m.
+reduc forall m: bitstring, sk: skey; checksign(sign(m, sk), pk(sk)) = m.
+
+(* -----One-way hash function----- *)
+
+fun hash1(bitstring):bitstring.
+fun hash2(bitstring, bitstring): bitstring.
+fun hash3(bitstring, bitstring, bitstring): bitstring.
+fun hash4(bitstring, bitstring, bitstring, bitstring): bitstring.
+fun hash5(bitstring, bitstring, bitstring, bitstring, bitstring): bitstring.
+
+(* -----Property translation---- *)
+
+fun vm2server(bitstring): bitstring.
+fun mea2res(bitstring, bitstring): bitstring.
+
+
+(* ----- Variables and events----- *)
+
+free customer_controller: channel.
+free controller_server: channel.
+free server_pca: channel.
+free controller_pca: channel.
+free customer_pca: channel.
+
+free sk_pca: skey [private].
+free sk_customer: skey [private].
+(* ----- If the Cloud Controller is untrusted, set sk_controller as public ----- *)
+free sk_controller: skey [private].
+free sk_server: skey [private].
+
+free customer_identify: bitstring.
+free controller_identify: bitstring.
+free server_identify: bitstring.
+
+free vid: bitstring [private].
+free prop: bitstring [private].
+free M: bitstring [private].
+
+event sk_customer_get_cert().
+event sk_controller_get_cert().
+event sk_server_get_cert().
+
+event customer_start_controller().
+event customer_finish_controller().
+event controller_start_customer().
+event controller_finish_customer().
+
+event controller_start_server().
+event controller_finish_server().
+event server_start_controller().
+event server_finish_controller().
+
+event customer_request().
+event controller_recvd().
+event controller_request().
+event server_recvd().
+event server_request().
+event server_response().
+event controller_response().
+event customer_response().
+
+event vid_modified().
+event vid_unmodified().
+event prop_modified().
+event prop_unmodified().
+event server_modified().
+event server_unmodified().
+event rM_modified().
+event rM_unmodified().
+event R_modified().
+event R_unmodified().
+event M_modified().
+event M_unmodified().
+
+(* -----Privacy Certificate Authority----- *)
+
+let pca_action(sk_pca:skey, pk_customer:pkey, pk_controller:pkey, pk_server:pkey) = 
+  out (customer_pca, sign((customer_identify, pkey2str(pk_customer)), sk_pca));
+  out (controller_pca, sign((controller_identify, pkey2str(pk_controller)), sk_pca));
+  out (server_pca, sign((server_identify, pkey2str(pk_server)), sk_pca)).
+
+(* -----Customer----- *)
+
+let customer_action(sk_customer: skey, pk_pca: pkey) =
+  new kx: key;
+  in (customer_pca, sk_customer_cert: bitstring);
+  let (=customer_identify, =pkey2str(pk(sk_customer))) = checksign(sk_customer_cert, pk_pca) in
+    event sk_customer_get_cert();
+
+  event customer_start_controller();
+  out (customer_controller, (pk(sk_customer), sk_customer_cert));
+  in (customer_controller, m1: bitstring);
+  let (pk_controller: pkey, sk_controller_cert: bitstring) = m1 in
+    let (=controller_identify, = pkey2str(pk_controller)) = checksign(sk_controller_cert, pk_pca) in
+      out (customer_controller, aenc(sign(key2str(kx), sk_customer), pk_controller));
+
+  in (customer_controller, m2: bitstring);
+  let y = adec(m2, sk_customer) in
+    let (=kx) = str2key(checksign(y, pk_controller)) in
+      event customer_finish_controller();
+
+  new nonce1: bitstring;
+  out (customer_controller, senc((vid, prop, nonce1), kx));
+  event customer_request();
+
+  in (customer_controller, m3: bitstring);
+  let (=vid, =prop, R_1:bitstring, =nonce1, hash_value:bitstring) = checksign(sdec(m3, kx), pk_controller) in
+    if hash4(vid, prop, R_1, nonce1) = hash_value then
+      event customer_response();
+
+  if R_1 <> mea2res(prop, M) then
+    event R_modified()
+  else event R_unmodified().
+
+
+(* -----Cloud Controller----- *)
+
+let controller_action(sk_controller: skey, pk_pca: pkey) =
+  new ky: key;
+  in (controller_pca, sk_controller_cert: bitstring);
+  let (=controller_identify, =pkey2str(pk(sk_controller))) = checksign(sk_controller_cert, pk_pca) in
+    event sk_controller_get_cert();
+
+  in (customer_controller, m1: bitstring);
+  let (pk_customer: pkey, sk_customer_cert: bitstring) = m1 in
+    let (=customer_identify, = pkey2str(pk_customer)) = checksign(sk_customer_cert, pk_pca) in
+      event controller_start_customer();
+
+  out (customer_controller, (pk(sk_controller), sk_controller_cert));
+
+  in (customer_controller, m2: bitstring);
+  let y = adec(m2, sk_controller) in
+    let (kx:key) = str2key(checksign(y, pk_customer)) in
+      event controller_finish_customer();
+
+  out (customer_controller, aenc(sign(key2str(kx), sk_controller), pk_customer));
+
+
+  event controller_start_server(); 
+  out (controller_server, (pk(sk_controller), sk_controller_cert));
+  in (controller_server, m3: bitstring);
+  let (pk_server: pkey, sk_server_cert: bitstring) = m3 in
+    let (=server_identify, = pkey2str(pk_server)) = checksign(sk_server_cert, pk_pca) in
+      out (controller_server, aenc(sign(key2str(ky), sk_controller), pk_server));
+
+  in (controller_server, m6: bitstring);
+  let z = adec(m6, sk_controller) in
+    let (=ky) = str2key(checksign(z, pk_server)) in
+      event controller_finish_server();
+
+  in (customer_controller, m4: bitstring);
+  let (vid_1: bitstring, prop_1: bitstring, nonce1_1: bitstring) = sdec(m4, kx) in
+    event controller_recvd();
+
+  if vid_1 <> vid then
+    event vid_modified()
+  else event vid_unmodified();
+
+  if prop_1 <> prop then
+    event prop_modified()
+  else event prop_unmodified();
+
+  new nonce2: bitstring;
+  out (controller_server, senc((vid_1, vm2server(vid_1), prop_1, nonce2), ky));
+  event controller_request();
+
+  in (controller_server, m5: bitstring);
+  let (=vid_1, =vm2server(vid_1), =prop_1, R_1:bitstring, =nonce2, hash_value:bitstring) = checksign(sdec(m5, ky), pk_server) in
+    if hash5(vid_1, vm2server(vid_1), prop_1, R_1, nonce2) = hash_value then
+      event controller_response();
+
+  if R_1 <> mea2res(prop, M) then
+    event R_modified()
+  else event R_unmodified();
+
+  out (customer_controller, senc(sign((vid_1, prop_1, R_1, nonce1_1, hash4(vid_1, prop_1, R_1, nonce1_1)), sk_controller), kx)).
+
+
+(* -----Attestation Server----- *)
+
+let server_action(sk_server: skey, pk_pca: pkey) =
+  in (server_pca, sk_server_cert: bitstring);
+  let (=server_identify, =pkey2str(pk(sk_server))) = checksign(sk_server_cert, pk_pca) in
+    event sk_server_get_cert();
+
+  in (controller_server, m1: bitstring);
+  let (pk_controller: pkey, sk_controller_cert: bitstring) = m1 in
+    let (=controller_identify, = pkey2str(pk_controller)) = checksign(sk_controller_cert, pk_pca) in
+      event server_start_controller();
+
+  out (controller_server, (pk(sk_server), sk_server_cert));
+
+  in (controller_server, m2: bitstring);
+  let y = adec(m2, sk_server) in
+    let (ky:key) = str2key(checksign(y, pk_controller)) in
+      event server_finish_controller();
+
+  out (controller_server, aenc(sign(key2str(ky), sk_server), pk_controller));
+
+  in (controller_server, m6: bitstring);
+  let (vid_1:bitstring, server_1:bitstring, prop_1:bitstring, nonce2_1:bitstring) = sdec(m6, ky) in
+    event server_recvd();
+
+  if vid_1 <> vid then
+    event vid_modified()
+  else event vid_unmodified();
+
+  if prop_1 <> prop then
+    event prop_modified()
+  else event prop_unmodified();
+
+  if server_1 <> vm2server(vid) then
+    event server_modified()
+  else event server_unmodified();
+
+  out (controller_server, senc(sign((vid_1, server_1, prop_1, mea2res(prop_1, M), nonce2_1, hash5(vid_1, server_1, prop_1, mea2res(prop_1, M), nonce2_1)), sk_server), ky)).
+
+query event(R_modified()).
+
+process
+  (!pca_action(sk_pca, pk(sk_customer), pk(sk_controller), pk(sk_server))) |
+  (!server_action(sk_server, pk(sk_pca))) |
+  (!controller_action(sk_controller, pk(sk_pca))) |
+  (!customer_action(sk_customer, pk(sk_pca)))

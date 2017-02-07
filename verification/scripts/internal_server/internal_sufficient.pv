@@ -1,0 +1,98 @@
+(* attest.pv: Script for cloud attestation *)
+
+(* -----Symmetric key encryption----- *)
+
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+fun key2str(key): bitstring.
+reduc forall k_x: key; str2key(key2str(k_x)) = k_x.
+
+(* -----Asymmetric key encryption----- *)
+
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun aenc(bitstring, pkey): bitstring.
+reduc forall m: bitstring, sk: skey; adec(aenc(m,pk(sk)),sk) = m.
+
+fun pkey2str(pkey): bitstring.
+reduc forall pk_x: pkey; str2pkey(pkey2str(pk_x)) = pk_x.
+
+(* -----Digital signatures----- *)
+
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey; getmess(sign(m, sk)) = m.
+reduc forall m: bitstring, sk: skey; checksign(sign(m, sk), pk(sk)) = m.
+
+(* -----One-way hash function----- *)
+
+fun hash1(bitstring):bitstring.
+fun hash2(bitstring, bitstring): bitstring.
+fun hash3(bitstring, bitstring, bitstring): bitstring.
+fun hash4(bitstring, bitstring, bitstring, bitstring): bitstring.
+fun hash5(bitstring, bitstring, bitstring, bitstring, bitstring): bitstring.
+
+
+(* -----Property translation---- *)
+
+fun meareq2mea(bitstring, bitstring): bitstring.
+
+(* ----- Variables and events----- *)
+
+free out_client: channel.
+
+free kz: key [private].
+free ask_trust: skey [private].
+
+
+free vid: bitstring [private].
+free rM: bitstring [private].
+
+
+event out_recvd().
+event client_recvd().
+
+
+event M_modified().
+event M_unmodified().
+
+(* ----- Using reachiability to test the protocol ----- *)
+
+query event(client_recvd()).
+query event(out_recvd()).
+
+
+(* ----- Verify integrity ----- *)
+query event(M_modified()).
+
+
+let out_action() = 
+  new nonce3: bitstring;
+  out (out_client, senc((vid, rM, nonce3), kz));
+
+  in (out_client, m1: bitstring);
+
+  let (=vid, =rM, M_1:bitstring,  =nonce3, hash_value: bitstring) = checksign(sdec(m1, kz), pk(ask_trust)) in
+    if hash4(vid, rM, M_1, nonce3) = hash_value then
+      event out_recvd();
+
+  if M_1 <> meareq2mea(vid, rM) then
+    event M_modified()
+  else event M_unmodified().
+  
+
+let client_action() = 
+  in (out_client, m1: bitstring);
+
+  let (vid_1:bitstring, rM_1:bitstring, nonce3_1: bitstring) = sdec(m1, kz) in
+    event client_recvd();
+
+
+  out(out_client, senc(sign((vid_1, rM_1, meareq2mea(vid_1, rM_1), nonce3_1, hash4(vid_1, rM_1, meareq2mea(vid_1, rM_1), nonce3_1)), ask_trust), kz)).
+
+
+process
+  (!out_action()) |
+  (!client_action())
