@@ -41,7 +41,7 @@ class PciDevTracker(object):
     devices to/from instances, and to update the available pci passthrough
     devices information from hypervisor periodically.
 
-    `pci_devs` attribute of this class is the in-memory "master copy" of all
+    `pci_devs` attribute of this class is the in-memory "main copy" of all
     devices on each compute host, and all data changes that happen when
     claiming/allocating/freeing
     devices HAVE TO be made against instances contained in `pci_devs` list,
